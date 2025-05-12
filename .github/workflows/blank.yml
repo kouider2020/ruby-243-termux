@@ -1,0 +1,56 @@
+name: Build Ruby 2.4.3 Termux .deb
+
+on:
+  workflow_dispatch:          # lets you click “Run workflow”
+  push: {branches: [main]}    # or build on every push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v4
+
+      - name: Clone Termux build environment
+        run: |
+          git clone https://github.com/termux/termux-packages.git
+          cd termux-packages
+          ./scripts/setup-termux.sh   # sets up the docker image
+
+      - name: Drop our Ruby 2.4.3 recipe + patch
+        run: |
+          cd termux-packages
+          mkdir -p packages/ruby243/patches
+          cat > packages/ruby243/build.sh <<'EOF'
+          TERMUX_PKG_HOMEPAGE=https://www.ruby-lang.org/
+          TERMUX_PKG_DESCRIPTION="Ruby programming language 2.4.3"
+          TERMUX_PKG_LICENSE="BSD 2-Clause"
+          TERMUX_PKG_VERSION=2.4.3
+          TERMUX_PKG_SRCURL=https://cache.ruby-lang.org/pub/ruby/2.4/ruby-${TERMUX_PKG_VERSION}.tar.gz
+          TERMUX_PKG_SHA256=fd037caa21c29c9a4fe5449c508412f85132f2e3fc7fae4536ab890f4ce7b092
+          TERMUX_PKG_DEPENDS="libffi, libgmp, libgdbm, ncurses, readline, openssl, zlib"
+          TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+            --enable-shared
+            --with-opt-dir=$TERMUX_PREFIX
+            --disable-install-doc"
+          TERMUX_PKG_MAKE_PROCESSES=4
+          TERMUX_PKG_RM_AFTER_INSTALL="lib/ruby/2.4.0/rdoc"
+          TERMUX_PKG_BUILD_IN_SRC=true
+          EOF
+
+          # Add the patch
+          cat > packages/ruby243/patches/fix-bigdecimal-clang11.patch <<'EOF'
+          <paste the diff above>
+          EOF
+
+      - name: Build the package
+        run: |
+          cd termux-packages
+          ./build-package.sh -I ruby243
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruby_2.4.3_armv8l
+          path: termux-packages/debs/*.deb
+          
