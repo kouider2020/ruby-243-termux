@@ -48,9 +48,8 @@ EOF
             ./build-package.sh -I ruby243
             cp -v debs/*.deb /mnt/
           '
-
-        - name: Upload built .deb package
-        uses: actions/upload-artifact@v4
-        with:
+           - name: Upload built .deb package
+           uses: actions/upload-artifact@v4
+          with:
           name: ruby_2.4.3_armv8l
           path: ./*.deb
