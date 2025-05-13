@@ -32,26 +32,11 @@ jobs:
             TERMUX_PKG_RM_AFTER_INSTALL="lib/ruby/2.4.0/rdoc"
             TERMUX_PKG_BUILD_IN_SRC=true
             EOF
-
-            cat > packages/ruby243/patches/fix-bigdecimal-clang11.patch <<"EOF"
---- a/ext/bigdecimal/bigdecimal.c
-+++ b/ext/bigdecimal/bigdecimal.c
-@@
--static VALUE rb_rational_den(VALUE rat)
-+static VALUE
-+rb_rational_den(VALUE rat)
- {
--    return rb_funcall(rat, rb_intern("denominator"));
-+    return rb_funcall(rat, rb_intern("denominator"), 0);
- }
-EOF
-
             ./build-package.sh -I ruby243
-            cp -v debs/*.deb /mnt/
-            '
-
-            - name: Upload built .deb package
-            uses: actions/upload-artifact@v4
-            with:
-                name: ruby_2.4.3_armv8l
-                path: ./*.deb
+             cp -v debs/*.deb /mnt/
+             '
+             - name: Upload built .deb package
+                  uses: actions/upload-artifact@v4
+                  with:
+                     name: ruby_2.4.3_armv8l
+                     path: ./*.deb
