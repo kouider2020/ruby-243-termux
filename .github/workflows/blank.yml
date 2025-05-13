@@ -49,8 +49,8 @@ EOF
             cp -v debs/*.deb /mnt/
           '
 
-      - name: Upload built .deb package
-        uses: actions/upload-artifact@v4
-        with:
-          name: ruby_2.4.3_armv8l
-          path: ./*.deb
+           - name: Upload built .deb package
+           uses: actions/upload-artifact@v4
+           with:
+               name: ruby_2.4.3_armv8l
+               path: ./*.deb
