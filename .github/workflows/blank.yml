@@ -55,4 +55,3 @@ EOF
         with:
           name: ruby_2.4.3_armv8l
           path: ./*.deb
-          
