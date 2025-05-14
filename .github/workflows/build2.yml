@@ -18,33 +18,21 @@ jobs:
       - name: Download Ruby 2.4.3
         run: |
           curl -O https://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.3.tar.gz
+          https://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.3.tar.gz
           tar -xzf ruby-2.4.3.tar.gz
           cd ruby-2.4.3
           ./configure --prefix=/usr/local/ruby243 --disable-install-doc
           make -j$(nproc)
-          make install
+          make install 
 
-      - name: Create .deb package structure
-        run: |
-          mkdir -p ruby243_deb/usr/local
-          cp -r /usr/local/ruby243 ruby243_deb/usr/local/
-          mkdir -p ruby243_deb/DEBIAN
-          cat <<EOF > ruby243_deb/DEBIAN/control
-          Package: ruby243
-          Version: 2.4.3
-          Section: interpreters
-          Priority: optional
-          Architecture: arm
-          Maintainer: YourName <you@example.com>
-          Description: Ruby 2.4.3 built for Termux (armv8l/armhf)
-          EOF
+
 
       - name: Build .deb
         run: |
-          dpkg-deb --build ruby243_deb
+          dpkg-deb --build ruby-2.4.3_deb
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ruby243-termux
-          path: ruby243_deb.deb
+          name: ruby-2.4.3-termux
+          path: ruby-2.4.3_deb.deb
