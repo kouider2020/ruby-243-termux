@@ -34,7 +34,7 @@ jobs:
           Version: 2.4.3
           Section: interpreters
           Priority: optional
-          Architecture: armhf
+          Architecture: arm
           Maintainer: YourName <you@example.com>
           Description: Ruby 2.4.3 built for Termux (armv8l/armhf)
           EOF
