@@ -44,7 +44,7 @@ jobs:
           dpkg-deb --build ruby243_deb
 
       - name: Upload .deb artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ruby243-termux
           path: ruby243_deb.deb
