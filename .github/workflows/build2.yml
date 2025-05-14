@@ -1,4 +1,4 @@
-name: Build Ruby 2.4.3 .deb for Termux
+name: Build Ruby 2.4.3 for Termux
 
 on:
   workflow_dispatch:
@@ -6,36 +6,45 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: debian:bullseye
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build in Termux Docker
+      - name: Install dependencies
         run: |
-          docker run --rm -v "$PWD":/mnt ghcr.io/termux/package-builder bash -c '
-            set -e
-            cd /home/builder
-            git clone https://github.com/termux/termux-packages
-            cd termux-packages
-            mkdir -p packages/ruby243/patches
-            cat > packages/ruby243/build.sh <<EOF
-              TERMUX_PKG_HOMEPAGE="https://www.ruby-lang.org/"
-              TERMUX_PKG_DESCRIPTION="Ruby programming language v2.4.3"
-              TERMUX_PKG_LICENSE="BSD 2-Clause"
-              TERMUX_PKG_VERSION=2.4.3
-              TERMUX_PKG_SRCURL=https://cache.ruby-lang.org/pub/ruby/2.4/ruby-${TERMUX_PKG_VERSION}.tar.gz
-              TERMUX_PKG_DEPENDS="libffi, libgmp, libgdbm, ncurses, readline, openssl, zlib"
-              TERMUX_PKG_EXTRA_CONFIGURE_ARGS="--enable-shared --with-opt-dir=$TERMUX_PREFIX --disable-install-doc"
-              TERMUX_PKG_RM_AFTER_INSTALL="lib/ruby/2.4.0/rdoc"
-              TERMUX_PKG_BUILD_IN_SRC=true
-            EOF
+          apt-get update
+          apt-get install -y build-essential git curl libssl-dev libreadline-dev zlib1g-dev libffi-dev autoconf bison libgdbm-dev libncurses5-dev libyaml-dev
 
-           ./build-package.sh -I ruby243
-           cp -v debs/*.deb /mnt/
-           '
-          - name: Upload built .deb package
-           uses: actions/upload-artifact@v4
-          with:
-          name: ruby_2.4.3_armv8l
-          path: ./*.deb
+      - name: Download Ruby 2.4.3
+        run: |
+          curl -O https://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.3.tar.gz
+          tar -xzf ruby-2.4.3.tar.gz
+          cd ruby-2.4.3
+          ./configure --prefix=/usr/local/ruby243 --disable-install-doc
+          make -j$(nproc)
+          make install
+
+      - name: Create .deb package structure
+        run: |
+          mkdir -p ruby243_deb/usr/local
+          cp -r /usr/local/ruby243 ruby243_deb/usr/local/
+          mkdir -p ruby243_deb/DEBIAN
+          cat <<EOF > ruby243_deb/DEBIAN/control
+          Package: ruby243
+          Version: 2.4.3
+          Section: interpreters
+          Priority: optional
+          Architecture: armhf
+          Maintainer: YourName <you@example.com>
+          Description: Ruby 2.4.3 built for Termux (armv8l/armhf)
+          EOF
+
+      - name: Build .deb
+        run: |
+          dpkg-deb --build ruby243_deb
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ruby243-termux
+          path: ruby243_deb.deb
